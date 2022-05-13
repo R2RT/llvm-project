@@ -404,12 +404,13 @@ void UseTrailingReturnTypeCheck::keepSpecifiers(
 
 void UseTrailingReturnTypeCheck::registerMatchers(MatchFinder *Finder) {
   auto F = functionDecl(
+               unless(isInExternCContext()),
                unless(anyOf(hasTrailingReturn(), returns(voidType()),
                             cxxConversionDecl(), cxxMethodDecl(isImplicit()))))
                .bind("Func");
 
   Finder->addMatcher(F, this);
-  Finder->addMatcher(friendDecl(hasDescendant(F)).bind("Friend"), this);
+  Finder->addMatcher(friendDecl(unless(isInExternCContext()), hasDescendant(F)).bind("Friend"), this);
 }
 
 void UseTrailingReturnTypeCheck::registerPPCallbacks(
@@ -428,6 +429,9 @@ void UseTrailingReturnTypeCheck::check(const MatchFinder::MatchResult &Result) {
   if (F->getLocation().isInvalid())
     return;
 
+//   if (F->getDeclContext()->isExternCContext())
+//     return;
+// 
   // Skip functions which return just 'auto'.
   const auto *AT = F->getDeclaredReturnType()->getAs<AutoType>();
   if (AT != nullptr && !AT->isConstrained() &&

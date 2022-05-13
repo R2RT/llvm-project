@@ -34,6 +34,7 @@ void UseNoexceptCheck::registerMatchers(MatchFinder *Finder) {
   Finder->addMatcher(
       functionDecl(
           isValid(),
+          unless(isInExternCContext()),
           hasTypeLoc(loc(functionProtoType(hasDynamicExceptionSpec()))),
           optionally(cxxMethodDecl(anyOf(hasAnyOverloadedOperatorName(
                                              "delete[]", "delete"),
@@ -43,7 +44,8 @@ void UseNoexceptCheck::registerMatchers(MatchFinder *Finder) {
       this);
 
   Finder->addMatcher(
-      parmVarDecl(anyOf(hasType(pointerType(pointee(parenType(innerType(
+      parmVarDecl(unless(isInExternCContext()),
+                 anyOf(hasType(pointerType(pointee(parenType(innerType(
                             functionProtoType(hasDynamicExceptionSpec())))))),
                         hasType(memberPointerType(pointee(parenType(innerType(
                             functionProtoType(hasDynamicExceptionSpec()))))))))
@@ -57,6 +59,8 @@ void UseNoexceptCheck::check(const MatchFinder::MatchResult &Result) {
   SourceRange Range;
 
   if (const auto *FuncDecl = Result.Nodes.getNodeAs<FunctionDecl>("funcDecl")) {
+    if (FuncDecl->getDeclContext()->isExternCContext())
+      return;
     DtorOrOperatorDel = Result.Nodes.getNodeAs<FunctionDecl>("del-dtor");
     FnTy = FuncDecl->getType()->getAs<FunctionProtoType>();
     if (const auto *TSI = FuncDecl->getTypeSourceInfo())
@@ -64,6 +68,8 @@ void UseNoexceptCheck::check(const MatchFinder::MatchResult &Result) {
           TSI->getTypeLoc().castAs<FunctionTypeLoc>().getExceptionSpecRange();
   } else if (const auto *ParmDecl =
                  Result.Nodes.getNodeAs<ParmVarDecl>("parmVarDecl")) {
+    if (ParmDecl->getDeclContext()->isExternCContext())
+      return;
     FnTy = ParmDecl->getType()
                ->getAs<Type>()
                ->getPointeeType()

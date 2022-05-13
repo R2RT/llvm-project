@@ -56,6 +56,7 @@ void ProBoundsArrayToPointerDecayCheck::registerMatchers(MatchFinder *Finder) {
   Finder->addMatcher(
       traverse(TK_AsIs,
                implicitCastExpr(
+                   unless(isInExternCContext()),
                    unless(hasParent(arraySubscriptExpr())),
                    unless(hasParentIgnoringImpCasts(explicitCastExpr())),
                    unless(isInsideOfRangeBeginEndStmt()),
@@ -66,6 +67,9 @@ void ProBoundsArrayToPointerDecayCheck::registerMatchers(MatchFinder *Finder) {
 
 void ProBoundsArrayToPointerDecayCheck::check(
     const MatchFinder::MatchResult &Result) {
+//   if (Result.Context->ExternCContext != nullptr)
+//     return;
+// 
   const auto *MatchedCast = Result.Nodes.getNodeAs<ImplicitCastExpr>("cast");
   if (MatchedCast->getCastKind() != CK_ArrayToPointerDecay)
     return;
