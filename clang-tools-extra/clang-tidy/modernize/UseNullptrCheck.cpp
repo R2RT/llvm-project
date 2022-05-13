@@ -47,12 +47,14 @@ StatementMatcher makeCastSequenceMatcher() {
 
   return traverse(
       TK_AsIs,
-      anyOf(castExpr(anyOf(ImplicitCastToNull,
+      anyOf(castExpr(unless(isInExternCContext()),
+                     anyOf(ImplicitCastToNull,
                            explicitCastExpr(hasDescendant(ImplicitCastToNull))),
                      unless(hasAncestor(explicitCastExpr())),
                      unless(hasAncestor(cxxRewrittenBinaryOperator())))
                 .bind(CastSequence),
             cxxRewrittenBinaryOperator(
+                unless(isInExternCContext()),
                 // Match rewritten operators, but verify (in the check method)
                 // that if an implicit cast is found, it is not from another
                 // nested rewritten operator.
@@ -217,7 +219,7 @@ public:
       return true;
     }
 
-    auto* CastSubExpr = C->getSubExpr()->IgnoreParens();
+    auto *CastSubExpr = C->getSubExpr()->IgnoreParens();
     // Ignore cast expressions which cast nullptr literal.
     if (isa<CXXNullPtrLiteralExpr>(CastSubExpr)) {
       return true;
@@ -501,6 +503,9 @@ void UseNullptrCheck::check(const MatchFinder::MatchResult &Result) {
       Result.Nodes.getNodeAs<CXXRewrittenBinaryOperator>("checkBinopOperands"))
     return;
 
+  //   if (Result.Context->ExternCContext != nullptr)
+  //     return;
+  //
   // Given an implicit null-ptr cast or an explicit cast with an implicit
   // null-to-pointer cast within use CastSequenceVisitor to identify sequences
   // of explicit casts that can be converted into 'nullptr'.

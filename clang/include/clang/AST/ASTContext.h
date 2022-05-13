@@ -599,7 +599,9 @@ private:
   ImportDecl *LastLocalImport = nullptr;
 
   TranslationUnitDecl *TUDecl = nullptr;
+  public:
   mutable ExternCContextDecl *ExternCContext = nullptr;
+  private:
   mutable BuiltinTemplateDecl *MakeIntegerSeqDecl = nullptr;
   mutable BuiltinTemplateDecl *TypePackElementDecl = nullptr;
 

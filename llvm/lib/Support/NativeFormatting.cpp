@@ -167,6 +167,7 @@ void llvm::write_double(raw_ostream &S, double N, FloatStyle Style,
     S << "nan";
     return;
   } else if (std::isinf(N)) {
+    // S << (std::isinf(N) ? "" : "cannot happen");
     S << (std::signbit(N) ? "-INF" : "INF");
     return;
   }

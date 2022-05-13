@@ -29,7 +29,7 @@ void UseUsingCheck::storeOptions(ClangTidyOptions::OptionMap &Opts) {
 }
 
 void UseUsingCheck::registerMatchers(MatchFinder *Finder) {
-  Finder->addMatcher(typedefDecl(unless(isInstantiated()),
+  Finder->addMatcher(typedefDecl(unless(isInExternCContext()), unless(isInstantiated()),
                                  hasParent(decl().bind(ParentDeclName)))
                          .bind(TypedefName),
                      this);
@@ -38,6 +38,7 @@ void UseUsingCheck::registerMatchers(MatchFinder *Finder) {
   // typedefs. They appear in the AST just *prior* to the typedefs.
   Finder->addMatcher(
       tagDecl(
+          unless(isInExternCContext()),
           anyOf(allOf(unless(anyOf(isImplicit(),
                                    classTemplateSpecializationDecl())),
                       hasParent(decl().bind(ParentDeclName))),
@@ -76,6 +77,9 @@ void UseUsingCheck::check(const MatchFinder::MatchResult &Result) {
   if (StartLoc.isMacroID() && IgnoreMacros)
     return;
 
+//  if (MatchedDecl->getDeclContext()->isExternCContext())
+//    return;
+//
   static const char *UseUsingWarning = "use 'using' instead of 'typedef'";
 
   // Warn at StartLoc but do not fix if there is macro or array.

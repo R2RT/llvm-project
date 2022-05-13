@@ -249,6 +249,11 @@ AST_POLYMORPHIC_MATCHER(isExpansionInMainFile,
       SourceManager.getExpansionLoc(Node.getBeginLoc()));
 }
 
+AST_POLYMORPHIC_MATCHER(isInExternCContext,
+                        AST_POLYMORPHIC_SUPPORTED_TYPES(Decl, Stmt, TypeLoc)) {
+  return Finder->getASTContext().ExternCContext != nullptr;
+}
+
 /// Matches AST nodes that were expanded within system-header-files.
 ///
 /// Example matches Y but not X

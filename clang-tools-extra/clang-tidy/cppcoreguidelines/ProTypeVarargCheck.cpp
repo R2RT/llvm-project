@@ -131,16 +131,18 @@ private:
 } // namespace
 
 void ProTypeVarargCheck::registerMatchers(MatchFinder *Finder) {
-  Finder->addMatcher(VAArgExpr().bind("va_use"), this);
+  Finder->addMatcher(VAArgExpr(unless(isInExternCContext())).bind("va_use"), this);
 
   Finder->addMatcher(
-      callExpr(callee(functionDecl(isVariadic(),
+      callExpr(unless(isInExternCContext()),
+              callee(functionDecl(isVariadic(),
                                    unless(hasAnyName(AllowedVariadics)))))
           .bind("callvararg"),
       this);
 
   Finder->addMatcher(
-      varDecl(unless(parmVarDecl()),
+      varDecl(unless(isInExternCContext()),
+                 unless(parmVarDecl()),
               hasType(qualType(
                   anyOf(isVAList(), decayedType(hasOriginalType(isVAList()))))))
           .bind("va_list"),
@@ -174,6 +176,9 @@ static bool hasSingleVariadicArgumentWithValue(const CallExpr *C, uint64_t I) {
 }
 
 void ProTypeVarargCheck::check(const MatchFinder::MatchResult &Result) {
+//   if (Result.Context->ExternCContext != nullptr)
+//     return;
+// 
   if (const auto *Matched = Result.Nodes.getNodeAs<CallExpr>("callvararg")) {
     if (hasSingleVariadicArgumentWithValue(Matched, 0))
       return;
