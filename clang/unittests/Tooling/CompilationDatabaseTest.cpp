@@ -954,6 +954,13 @@ TEST_F(TargetAndModeTest, TargetAndMode) {
             "clang++ --driver-mode=g++ bar.cpp -D bar.cpp");
 }
 
+TEST_F(TargetAndModeTest, HomeDirectory) {
+  add("~/bar.cpp", "clang++", " -o bar.o");
+
+  EXPECT_EQ(getCommand("~/bar.cpp"),
+            "clang++ --driver-mode=g++ ~/bar.cpp -D ~/bar.cpp -o bar.o");
+}
+
 class ExpandResponseFilesTest : public MemDBTest {
 public:
   ExpandResponseFilesTest() : FS(new llvm::vfs::InMemoryFileSystem) {}

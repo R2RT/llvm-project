@@ -28,12 +28,6 @@ if(NOT LLVM_USE_SANITIZER STREQUAL "")
   set(RUN_PYTHON_TESTS FALSE)
 endif()
 
-# Tests fail on Windows, and need someone knowledgeable to fix.
-# It's not clear whether it's a test or a valid binding problem.
-if(WIN32)
-  set(RUN_PYTHON_TESTS FALSE)
-endif()
-
 # The Python FFI interface is broken on AIX: https://bugs.python.org/issue38628.
 if(${CMAKE_SYSTEM_NAME} MATCHES "AIX")
   set(RUN_PYTHON_TESTS FALSE)
